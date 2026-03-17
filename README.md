@@ -2,6 +2,10 @@
 
 一个基于 Qt6 + C++17 开发的 Windows 桌面应用程序，专门用于批量修改视频文件的 MD5 哈希值。
 
+## 下载地址
+
+**夸克网盘**：<a href="https://pan.quark.cn/s/31e3824fdf09" target="_blank"><https://pan.quark.cn/s/31e3824fdf09></a>
+
 ## 功能特性
 
 - **批量处理**：支持同时修改多个视频文件的 MD5
@@ -126,19 +130,19 @@ MD5Modifier/
 
 ### 核心框架
 
-| 技术 | 说明 | 许可证 |
-| --- | --- | --- |
-| [Qt 6](https://www.qt.io/) | 跨平台 C++ 图形界面框架 | LGPL v3 |
+| 技术                                      | 说明              | 许可证       |
+| --------------------------------------- | --------------- | --------- |
+| [Qt 6](https://www.qt.io/)              | 跨平台 C++ 图形界面框架  | LGPL v3   |
 | [MinGW-w64](https://www.mingw-w64.org/) | Windows GCC 编译器 | ZPL / MIT |
 
 ### Qt 模块
 
-| 模块 | 说明 |
-| --- | --- |
-| QtCore | 核心非图形类 |
-| QtWidgets | 图形界面组件 |
-| QtGui | 图形界面基础 |
-| QtConcurrent | 多线程并发 |
+| 模块           | 说明     |
+| ------------ | ------ |
+| QtCore       | 核心非图形类 |
+| QtWidgets    | 图形界面组件 |
+| QtGui        | 图形界面基础 |
+| QtConcurrent | 多线程并发  |
 
 ## 许可证
 
