@@ -1,0 +1,42 @@
+# Build files
+*.o
+*.obj
+Makefile
+Makefile.*
+.qmake.stash
+*.rc
+
+# Directories
+release/
+debug/
+obj/
+moc/
+
+# Executable
+MD5Modifier.exe
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Qt generated files
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# IDE files
+.vscode/
+.idea/
+*.user
+*.pro.user
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test executables
+tests/*.exe
+
+# Private files
+提示词.txt
