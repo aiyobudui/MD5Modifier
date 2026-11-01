@@ -1,146 +1,75 @@
 @echo off
-setlocal enabledelayedexpansion
-chcp 936 >nul
-
-title Video MD5 Modifier - Build Script
+setlocal
+chcp 65001 >nul
+title MD5Modifier - .NET 8 Build (Single File)
 color 0A
-mode con cols=90 lines=30
 
-echo ================================================
-echo         MD5Modifier - Build Script
-echo ================================================
+echo ============================================
+echo        MD5Modifier - .NET 8 Build
+echo ============================================
 echo.
 
-:: Set MSYS2 paths
-set "MSYS2_PATH=C:\msys64"
-set "MINGW_PATH=%MSYS2_PATH%\ucrt64"
-set "PATH=%MINGW_PATH%\bin;%MSYS2_PATH%\usr\bin;%PATH%"
-
-:: Check compiler
-where g++ >nul 2>&1
+:: 检查 dotnet SDK
+where dotnet >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] g++ not found!
-    echo Please install MSYS2 to C:\msys64
+    echo [ERROR] 未找到 dotnet SDK！请安装 .NET 8 SDK。
     pause
     exit /b 1
 )
+echo [OK] dotnet found:
+for /f "tokens=*" %%i in ('dotnet --version') do echo   %%i
+echo.
 
-where qmake >nul 2>&1
+:: ========================================
+:: 1/4 构建前清理：删除所有临时打包文件
+:: ========================================
+echo [1/4] 清理临时打包文件（bin / obj / publish）...
+if exist "bin" rmdir /s /q "bin" 2>nul
+if exist "obj" rmdir /s /q "obj" 2>nul
+if exist "publish" rmdir /s /q "publish" 2>nul
+echo [OK] 清理完成
+echo.
+
+:: ========================================
+:: 2/4 发布单文件（框架依赖，需目标机安装 .NET 8 运行时）
+:: ========================================
+echo [2/4] 发布单文件（框架依赖，需目标机安装 .NET 8 运行时）...
+dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o publish
 if errorlevel 1 (
-    echo [ERROR] qmake not found!
+    echo ============================================
+    echo [ERROR] 发布失败！
     pause
     exit /b 1
 )
-
-echo [OK] Compiler found
+echo [OK] 发布完成
 echo.
 
 :: ========================================
-:: Clean all cache and build files
+:: 3/4 构建后清理：删除中间临时文件（bin / obj），仅保留 publish
 :: ========================================
-echo [1/4] Cleaning cache and build files...
-
-:: Remove Makefiles
-if exist "Makefile" del /f /q Makefile 2>nul
-if exist "Makefile.Release" del /f /q Makefile.Release 2>nul
-if exist "Makefile.Debug" del /f /q Makefile.Debug 2>nul
-if exist ".qmake.stash" del /f /q .qmake.stash 2>nul
-if exist "MD5Modifier_resource.rc" del /f /q MD5Modifier_resource.rc 2>nul
-
-:: Remove object files
-del /f /q *.o 2>nul
-del /f /q *.obj 2>nul
-
-:: Remove directories
-if exist "release" rmdir /s /q release 2>nul
-if exist "debug" rmdir /s /q debug 2>nul
-if exist "obj" rmdir /s /q obj 2>nul
-if exist "moc" rmdir /s /q moc 2>nul
-
-:: Remove old executable
-if exist "MD5Modifier.exe" del /f /q MD5Modifier.exe 2>nul
-
-echo [OK] Clean completed
+echo [3/4] 清理构建中间文件（bin / obj）...
+if exist "bin" rmdir /s /q "bin" 2>nul
+if exist "obj" rmdir /s /q "obj" 2>nul
+echo [OK] 清理完成
 echo.
 
 :: ========================================
-:: Check icon
+:: 4/4 收尾：确认产物
 :: ========================================
-echo [2/4] Checking icon file...
-
-if exist "assets\app.ico" (
-    echo [Icon] Found: assets\app.ico
+echo [4/4] 输出文件：
+if exist "publish\MD5Modifier.exe" (
+    for %%i in ("publish\MD5Modifier.exe") do echo   publish\MD5Modifier.exe  大小: %%~zi bytes
 ) else (
-    echo [Icon] Not found, using default
-)
-echo.
-
-:: ========================================
-:: Build
-:: ========================================
-echo [3/4] Building...
-echo ========================================
-
-qmake MD5Modifier.pro -spec win32-g++ "CONFIG+=release"
-if errorlevel 1 (
-    echo ========================================
-    echo [ERROR] qmake failed!
+    echo [ERROR] 未找到发布产物！
     pause
     exit /b 1
 )
-
-mingw32-make -j4
-if errorlevel 1 (
-    echo ========================================
-    echo [ERROR] Build failed!
-    pause
-    exit /b 1
-)
-
-echo ========================================
-echo [OK] Build completed
 echo.
-
-:: ========================================
-:: Copy exe and cleanup
-:: ========================================
-echo [4/4] Finalizing...
-
-if exist "release\MD5Modifier.exe" (
-    copy /y "release\MD5Modifier.exe" "MD5Modifier.exe" >nul
-)
-
-:: Clean build files
-if exist "Makefile" del /f /q Makefile 2>nul
-if exist "Makefile.Release" del /f /q Makefile.Release 2>nul
-if exist "Makefile.Debug" del /f /q Makefile.Debug 2>nul
-if exist ".qmake.stash" del /f /q .qmake.stash 2>nul
-if exist "MD5Modifier_resource.rc" del /f /q MD5Modifier_resource.rc 2>nul
-del /f /q *.o 2>nul
-del /f /q *.obj 2>nul
-if exist "release" rmdir /s /q release 2>nul
-if exist "debug" rmdir /s /q debug 2>nul
-if exist "obj" rmdir /s /q obj 2>nul
-if exist "moc" rmdir /s /q moc 2>nul
-
-echo [OK] Cleanup completed
+echo ============================================
+echo [完成] 构建成功！
+echo 说明：框架依赖单文件需目标机安装 .NET 8 运行时。
+echo 如需完全独立（无需安装运行时），改用自包含发布：
+echo   dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
+echo ============================================
 echo.
-
-:: ========================================
-:: Result
-:: ========================================
-if exist "MD5Modifier.exe" (
-    echo ================================================
-    echo [SUCCESS] Build complete!
-    echo Output: %CD%\MD5Modifier.exe
-    for %%i in ("MD5Modifier.exe") do echo Size: %%~zi bytes
-    echo ================================================
-) else (
-    echo ================================================
-    echo [ERROR] EXE not found!
-    echo ================================================
-)
-
-echo.
-echo Press any key to exit...
-pause >nul
+pause

@@ -1,10 +1,13 @@
 # 视频 MD5 修改工具
 
-一个基于 Qt6 + C++17 开发的 Windows 桌面应用程序，专门用于批量修改视频文件的 MD5 哈希值。
+一个基于 **.NET 8 + WinForms (C#)** 开发的 Windows 桌面应用程序，专门用于批量修改视频文件的 MD5 哈希值。
+
+> 本项目已由原 Qt6/C++ 版本重写为 .NET 版本，以消除 Qt 运行时 DLL 依赖。
+> 旧的 Qt6/C++ 源码已归档至 [`legacy-qt/`](legacy-qt/) 目录，仅供参考。
 
 ## 下载地址
 
-**夸克网盘**：<a href="https://pan.quark.cn/s/31e3824fdf09" target="_blank"><https://pan.quark.cn/s/31e3824fdf09></a>
+**夸克网盘**：<https://pan.quark.cn/s/31e3824fdf09>
 
 ## 功能特性
 
@@ -12,12 +15,17 @@
 - **拖拽支持**：可直接拖拽文件或文件夹到窗口
 - **自动备份**：可选创建备份文件到 `Bak` 文件夹
 - **实时进度**：显示处理进度和成功/失败数量
-- **暂停/继续**：支持暂停和继续处理
-- **MD5 显示**：自动计算并显示原始 MD5 和新 MD5
+- **暂停/继续**：支持暂停和继续处理（单按钮循环切换）
+- **MD5 显示**：自动计算并显示原始 MD5 和新 MD5（8MB 缓冲多线程计算）
 - **自动过滤**：非视频文件自动过滤，不显示在列表中
-- **高清图标**：支持 Windows 11 高分屏显示
-- **表格视图**：使用 QTableWidget 显示文件列表，支持拖拽调整列宽
+- **表格视图**：使用 DataGridView 显示文件列表，"文件名称"列随窗口宽度自动撑满（自适应布局），其余列支持拖拽调整
+- **原生复选框**：选择列采用原生 `DataGridViewCheckBoxColumn`，点击即可勾选/取消，稳定可靠
+- **顶部标题栏**：清晰的标题与副标题分隔栏，界面更整洁（已移除旧版易折行的"路径源"标签）
+- **圆角胶囊按钮**：浏览 / 开始修改按钮采用约 8px 软圆角设计
+- **数据列只读**：文件名 / 后缀 / 大小 / 原始MD5 / 新MD5 / 状态列为只读，避免误编辑
 - **全选功能**：一键全选/取消全选所有文件
+- **整行悬停高亮**：鼠标悬停行高亮（#B0E0E6）
+- **高 DPI 适配**：启用 PerMonitorV2 高 DPI 感知，不同分辨率下界面尺寸一致
 
 ## 支持的视频格式
 
@@ -45,49 +53,42 @@
 
 ### 文件写入
 
-使用 Windows API 直接写入文件：
-
-- `CreateFileW` - 打开文件
-- `WriteFile` - 写入数据
-- `FlushFileBuffers` - 确保数据写入磁盘
+使用 .NET `FileStream` 以追加方式写入随机数据并 `Flush` 到磁盘，路径采用 `\\?\` 长路径前缀以支持中文/超长路径（已在 `app.manifest` 中声明 `longPathAware`）。
 
 ### 暂停功能
 
-使用 `QWaitCondition` 实现真正的线程暂停，确保线程安全。
+使用 `ManualResetEventSlim` 实现真正的线程暂停，确保线程安全。
 
 ## 编译说明
 
 ### 环境要求
 
-- Qt 6.x
-- C++17
-- MinGW-w64 (MSYS2)
-- Windows 系统
+- **.NET 8 SDK**（含 Windows 桌面运行时）
+- Windows 10 / 11 系统
 
 ### 编译步骤
 
-**方式一：使用批处理脚本**
+**方式一：使用批处理脚本（推荐）**
 
 ```bash
 build.bat
 ```
 
-**方式二：使用 qmake**
+脚本会执行四步：① **构建前清理**临时文件（`bin` / `obj` / `publish`）→ ② 发布单文件 exe 到 `publish\MD5Modifier.exe` → ③ **构建后清理**中间文件（`bin` / `obj`，仅保留 `publish`）→ ④ 确认产物。无论构建成功或失败，窗口都会停留以便查看输出。
+
+**方式二：使用 dotnet 命令**
 
 ```bash
-qmake MD5Modifier.pro
-mingw32-make
+# 框架依赖单文件（需目标机安装 .NET 8 运行时）
+dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
+
+# 自包含单文件（无需安装运行时，体积更大）
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
 ```
-
-**方式三：使用 Qt Creator**
-
-1. 打开 `MD5Modifier.pro`
-2. 配置编译套件
-3. 点击构建
 
 ## 使用说明
 
-1. **添加文件**：拖拽文件或文件夹到窗口，或点击"浏览"按钮选择
+1. **添加文件**：拖拽文件或文件夹到窗口，或点击"浏览"按钮选择文件夹
 2. **选择文件**：勾选需要修改的视频文件，或使用"全选"复选框一键全选
 3. **备份选项**：勾选"创建备份"以保留原始文件
 4. **开始修改**：点击"开始修改"按钮
@@ -106,43 +107,19 @@ mingw32-make
 
 ```
 MD5Modifier/
-├── src/                      # 源代码
-│   ├── main.cpp             # 程序入口
-│   ├── MainWindow.h         # 主窗口头文件
-│   ├── MainWindow.cpp       # 主窗口实现
-│   ├── FileMd5Strategy.h    # MD5 修改策略头文件
-│   ├── FileMd5Strategy.cpp  # MD5 修改策略实现
-│   ├── ChinesePathHelper.h  # 中文路径处理工具
-│   ├── CustomCheckBox.h     # 自定义复选框
-│   └── create_icon_qt.cpp   # 图标生成工具
-├── assets/                   # 资源文件
+├── MainForm.cs              # 主窗口（UI + 交互 + 多线程）
+├── FileMd5Strategy.cs       # MD5 计算与文件修改策略
+├── ChinesePathHelper.cs     # 中文/长路径处理与备份目录
+├── Program.cs               # 程序入口
+├── MD5Modifier.csproj       # .NET 项目文件
+├── app.manifest             # 清单（DPI 感知 + longPathAware）
+├── build.bat                # 编译脚本（单文件发布，构建前后均清理临时文件）
+├── assets/                  # 资源文件
 │   ├── APP.png              # 原始图标图片
 │   └── app.ico              # 程序图标（多尺寸）
-├── MD5Modifier.pro          # Qt 项目文件
-├── build.bat                # 编译脚本
-├── ico_qt.bat               # 图标生成脚本
+├── legacy-qt/               # 旧 Qt6/C++ 版本归档（仅供参考）
 └── LICENSE                  # 开源协议
 ```
-
-## 开源技术
-
-本项目基于以下开源技术开发：
-
-### 核心框架
-
-| 技术                                      | 说明              | 许可证       |
-| --------------------------------------- | --------------- | --------- |
-| [Qt 6](https://www.qt.io/)              | 跨平台 C++ 图形界面框架  | LGPL v3   |
-| [MinGW-w64](https://www.mingw-w64.org/) | Windows GCC 编译器 | ZPL / MIT |
-
-### Qt 模块
-
-| 模块           | 说明     |
-| ------------ | ------ |
-| QtCore       | 核心非图形类 |
-| QtWidgets    | 图形界面组件 |
-| QtGui        | 图形界面基础 |
-| QtConcurrent | 多线程并发  |
 
 ## 许可证
 

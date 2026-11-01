@@ -1,16 +1,23 @@
-# Build files
+# .NET build artifacts
+bin/
+obj/
+publish/
+
+# Qt / legacy build artifacts
 *.o
 *.obj
 Makefile
 Makefile.*
 .qmake.stash
 *.rc
-
-# Directories
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
 release/
 debug/
-obj/
 moc/
+MD5Modifier.exe
+ico_qt.exe
 
 # Executable
 MD5Modifier.exe
@@ -20,12 +27,8 @@ MD5Modifier.exe
 *.temp
 *.log
 
-# Qt generated files
-moc_*.cpp
-ui_*.h
-qrc_*.cpp
-
 # IDE files
+.vs/
 .vscode/
 .idea/
 *.user
@@ -35,8 +38,5 @@ qrc_*.cpp
 .DS_Store
 Thumbs.db
 
-# Test executables
-tests/*.exe
-
-# Private files
-提示词.txt
+# Project metadata (WorkBuddy memory, not source)
+.workbuddy/
