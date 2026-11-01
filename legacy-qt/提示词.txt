@@ -1,0 +1,102 @@
+请帮我用Qt6开发一个Windows桌面应用程序，具体要求如下：
+
+【项目名称】视频 MD5 修改工具
+【作者署名】对酒当歌分享
+
+【核心功能】
+1. 支持拖拽文件/文件夹到窗口
+2. 支持批量选择文件
+3. 实时计算并显示原始MD5值（多线程）
+4. 批量修改视频文件MD5值（多线程）
+5. 支持创建备份文件（自动在Bak文件夹备份）
+6. 实时显示处理进度和成功/失败统计
+7. 支持暂停/继续功能
+8. 全选功能：一键全选/取消全选所有文件
+
+【支持的视频格式】
+- .mp4, .mkv, .avi, .mov, .wmv, .flv
+- .mpg, .mpeg, .webm, .m4v, .ts, .m2ts
+- 非视频文件自动过滤，不显示在列表中
+
+【界面布局-列宽设置】
+- 选择列：45px
+- 文件名称列：360px
+- 后缀列：65px
+- 大小列：80px
+- 原始MD5列：260px
+- 新MD5列：260px
+- 状态列：80px
+- 所有列支持拖拽调整宽度（Interactive 模式）
+
+【配色方案】
+- 鼠标悬停背景：#B0E0E6（粉蓝色）
+- 等待状态文字：#909399（灰色）
+- 成功状态文字：#67C23A（绿色加粗）
+- 失败状态文字：#F56C6C（红色加粗）
+- 表头背景：#E5E6EB
+- 浏览按钮：#409EFF
+- 开始按钮（空闲）：#67C23A
+- 暂停/继续按钮：#E6A23C
+
+【交互要求】
+1. 一个按钮实现开始/暂停/继续循环切换
+   - 空闲：绿色"开始修改"
+   - 运行：橙色"暂停修改"
+   - 暂停：橙色"继续修改"
+2. 鼠标悬停整行高亮（#B0E0E6）
+3. 全选复选框（灰色边框+灰色对勾，13x13像素）
+4. 处理完成后弹窗提示
+5. 浏览按钮默认选择文件夹
+6. 地址栏前面显示"路径源："标签
+7. 全选复选框向右偏移 15px
+
+【视频文件修改策略】
+- 在视频文件末尾追加 4 字节随机数据
+- 使用Windows API直接写入，确保数据写入磁盘
+- 修改后视频文件可正常播放
+
+【图标要求】
+- 程序图标包含 9 种尺寸：16x16, 24x24, 32x32, 48x48, 64x64, 96x96, 128x128, 192x192, 256x256
+- 支持 Windows 11 高分屏显示
+- 图标文件位于 assets/app.ico
+- 使用 Qt6 C++ 生成 ICO 文件（ico_qt.bat + src/create_icon_qt.cpp）
+
+【技术要求】
+1. 使用Qt6，C++17标准
+2. 多线程处理（MD5计算和文件修改分开线程）
+3. 支持中文路径（使用\\?\前缀）
+4. 构造函数初始化顺序必须与头文件声明顺序一致
+5. 所有指针在构造函数中初始化为nullptr
+6. 备份文件夹自动命名（Bak, Bak01, Bak02...）
+7. 暂停功能使用QWaitCondition实现真正的线程暂停
+8. 不显示控制台窗口
+9. MD5计算使用 8MB 缓冲区提高速度
+10. 使用 QTableWidget 显示文件列表
+11. 自定义复选框 CustomCheckBox（继承 QCheckBox，重写 paintEvent）
+
+【文件结构】
+需要生成以下文件：
+- MD5Modifier.pro（项目文件）
+- src/main.cpp（程序入口）
+- src/MainWindow.h/cpp（主窗口）
+- src/FileMd5Strategy.h/cpp（MD5修改策略）
+- src/ChinesePathHelper.h（中文路径处理）
+- src/CustomCheckBox.h（自定义复选框）
+- src/create_icon_qt.cpp（图标生成工具）
+- assets/APP.png（原始图标图片）
+- assets/app.ico（程序图标）
+- build.bat（编译脚本，自动清理缓存）
+- ico_qt.bat（图标生成脚本）
+- .gitignore（防止推送临时文件）
+- README.md（项目说明）
+- LICENSE（开源协议）
+
+【注意事项】
+1. FileMd5Strategy.cpp第一行必须是 #include "FileMd5Strategy.h"
+2. 不要在eventFilter中做复杂操作
+3. 所有中文字符串使用 QString::fromLocal8Bit()
+4. 非视频文件在addFileItem中过滤，不添加到列表
+5. 暂停功能使用QWaitCondition，确保线程安全
+6. 使用Windows API (CreateFileW, WriteFile, FlushFileBuffers) 写入文件
+7. ICO 文件使用 Qt6 C++ 生成，手动构建 ICO 文件结构
+8. 全选复选框与表格中的复选框同步状态
